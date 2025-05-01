@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { ArrowRight, BarChart3, BookOpen, TrendingUp } from "lucide-react"
 import FeatureCard from "@/components/feature-card"
 import TestimonialCard from "@/components/testimonial-card"
+import Dashboard from "@/app/Dashboard";
 
 export default function Home() {
   return (
