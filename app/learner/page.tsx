@@ -2,9 +2,13 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { BookOpen, CheckCircle, Clock, Lightbulb, TrendingUp } from "lucide-react"
+import { useState } from "react"
 import LearnerProgress from "@/components/learner-progress"
 
 export default function LearnerMode() {
+  const [activeLesson, setActiveLesson] = useState<string | null>(null);
+  const [selectedOdds, setSelectedOdds] = useState<string | null>(null);
+  const [reviewing, setReviewing] = useState(false);
   return (
     <div className="flex flex-col min-h-screen">
       {/* Hero Section */}
@@ -56,39 +60,50 @@ export default function LearnerMode() {
                   description="Learn how betting odds work and how to calculate implied probability."
                   duration="15 min"
                   completed={true}
-                />
+                  onStart={() => setActiveLesson(title)} />
                 <LessonCard
                   title="Value Betting"
                   description="Identify value in betting markets by comparing your probability estimates to bookmakers' odds."
                   duration="20 min"
                   completed={true}
-                />
+                  onStart={() => setActiveLesson(title)} />
                 <LessonCard
                   title="Bankroll Management"
                   description="Learn different staking strategies including flat betting, Kelly criterion, and unit-based approaches."
                   duration="25 min"
                   completed={false}
-                />
+                  onStart={() => setActiveLesson(title)} />
                 <LessonCard
                   title="Over/Under Markets"
                   description="Master the concepts behind total points markets and identify profitable opportunities."
                   duration="20 min"
                   completed={false}
-                />
+                  onStart={() => setActiveLesson(title)} />
                 <LessonCard
                   title="Line Movement"
                   description="Understand why betting lines move and what it means for finding value."
                   duration="15 min"
                   completed={false}
-                />
+                  onStart={() => setActiveLesson(title)} />
                 <LessonCard
                   title="Avoiding Common Biases"
                   description="Learn about cognitive biases that affect betting decisions and how to overcome them."
                   duration="30 min"
                   completed={false}
-                />
+                  onStart={() => setActiveLesson(title)} />
               </div>
-            </TabsContent>
+            
+            {activeLesson && (
+              <div className="mt-6 p-4 border rounded bg-muted">
+                <h4 className="font-semibold mb-2">📘 Reviewing: {activeLesson}</h4>
+                <p>This is where your review content or quiz would go for "{activeLesson}".</p>
+                <Button onClick={() => setActiveLesson(null)} className="mt-2">
+                  Close
+                </Button>
+              </div>
+            )}
+
+</TabsContent>
 
             <TabsContent value="challenges" className="space-y-8">
               <Card>
@@ -182,21 +197,21 @@ export default function LearnerMode() {
                           odds1="+150"
                           odds2="-180"
                           time="7:30 PM"
-                        />
+                          onStart={() => setActiveLesson(title)} />
                         <GameCard
                           team1="Kansas City Chiefs"
                           team2="San Francisco 49ers"
                           odds1="-120"
                           odds2="+100"
                           time="4:25 PM"
-                        />
+                          onStart={() => setActiveLesson(title)} />
                         <GameCard
                           team1="New York Yankees"
                           team2="Houston Astros"
                           odds1="-110"
                           odds2="-110"
                           time="1:05 PM"
-                        />
+                          onStart={() => setActiveLesson(title)} />
                       </div>
                     </div>
                   </div>
@@ -211,6 +226,7 @@ export default function LearnerMode() {
 }
 
 interface LessonCardProps {
+  onStart?: () => void
   title: string
   description: string
   duration: string
@@ -234,7 +250,7 @@ function LessonCard({ title, description, duration, completed }: LessonCardProps
           <Clock className="mr-1 h-4 w-4" />
           {duration}
         </div>
-        <Button variant={completed ? "outline" : "default"} size="sm">
+        <Button variant={completed ? "outline" : "default"} size="sm" onClick={onStart}>
           {completed ? "Review" : "Start"}
         </Button>
       </CardFooter>
@@ -273,8 +289,8 @@ function GameCard({ team1, team2, odds1, odds2, time }: GameCardProps) {
           </div>
         </div>
         <div className="flex flex-col justify-center items-center border-l pl-4">
-          <Button className="w-full mb-2">Place Bet</Button>
-          <Button variant="outline" className="w-full text-xs">
+          <Button className="w-full mb-2" onClick={() => alert(`Placed bet on odds: ${selectedOdds}`)}>Place Bet</Button>
+          <Button variant="outline" className="w-full text-xs" onClick={() => setReviewing(true)}>
             View Analysis
           </Button>
         </div>
@@ -282,3 +298,13 @@ function GameCard({ team1, team2, odds1, odds2, time }: GameCardProps) {
     </div>
   )
 }
+
+            {reviewing && (
+              <div className="mt-4 border p-4 rounded bg-muted">
+                <h4 className="font-semibold mb-2">📊 AI Analysis</h4>
+                <p>This is a placeholder for AI-powered betting odds analysis.</p>
+                <Button onClick={() => setReviewing(false)} className="mt-2">
+                  Close
+                </Button>
+              </div>
+            )}
