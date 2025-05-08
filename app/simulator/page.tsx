@@ -1,322 +1,209 @@
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Slider } from "@/components/ui/slider"
-import { ArrowRight, BarChart3, Droplet, Thermometer, User, Wind } from "lucide-react"
-import SimulationResults from "@/components/simulation-results"
+'use client';
+
+import { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Slider } from '@/components/ui/slider';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+
+interface SimulationResult {
+  day: number;
+  balance: number;
+  bets: number;
+  wins: number;
+}
 
 export default function SimulatorPage() {
+  const [initialBalance, setInitialBalance] = useState(1000);
+  const [betSize, setBetSize] = useState(50);
+  const [winRate, setWinRate] = useState(55);
+  const [odds, setOdds] = useState(2.0);
+  const [simulationDays, setSimulationDays] = useState(30);
+  const [results, setResults] = useState<SimulationResult[]>([]);
+  const [running, setRunning] = useState(false);
+
+  const runSimulation = () => {
+    setRunning(true);
+    const newResults: SimulationResult[] = [];
+    let balance = initialBalance;
+    let totalBets = 0;
+    let totalWins = 0;
+
+    for (let day = 1; day <= simulationDays; day++) {
+      // Simulate 5 bets per day
+      for (let i = 0; i < 5; i++) {
+        if (balance >= betSize) {
+          totalBets++;
+          const win = Math.random() * 100 < winRate;
+          if (win) {
+            balance += betSize * (odds - 1);
+            totalWins++;
+          } else {
+            balance -= betSize;
+          }
+        }
+      }
+
+      newResults.push({
+        day,
+        balance,
+        bets: totalBets,
+        wins: totalWins,
+      });
+    }
+
+    setResults(newResults);
+    setRunning(false);
+  };
+
+  const calculateROI = () => {
+    if (results.length === 0) return 0;
+    const finalBalance = results[results.length - 1].balance;
+    return ((finalBalance - initialBalance) / initialBalance) * 100;
+  };
+
   return (
-    <div className="flex flex-col min-h-screen">
-      {/* Hero Section */}
-      <section className="gradient-bg py-16">
-        <div className="container px-4 md:px-6">
-          <div className="grid gap-6 lg:grid-cols-2 lg:gap-12 items-center">
-            <div className="flex flex-col justify-center space-y-4">
-              <div className="space-y-2">
-                <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl xl:text-5xl/none text-white">
-                  What-If Simulator
-                </h1>
-                <p className="max-w-[600px] text-white/80 md:text-xl">
-                  Test theories and simulate scenarios by adjusting variables like injuries, weather, and line
-                  movements.
-                </p>
-              </div>
+    <div className="container mx-auto py-8 space-y-8">
+      <h1 className="text-3xl font-bold">Betting Simulator</h1>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Simulation Parameters</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="space-y-2">
+              <Label>Initial Balance ($)</Label>
+              <Input
+                type="number"
+                value={initialBalance}
+                onChange={(e) => setInitialBalance(Number(e.target.value))}
+                min={100}
+                max={10000}
+              />
             </div>
-            <div className="flex justify-center lg:justify-end">
-              <div className="apple-card p-6 w-full max-w-md">
-                <div className="flex items-center space-x-4 mb-4">
-                  <div className="rounded-full bg-blue-100 p-2">
-                    <BarChart3 className="h-6 w-6 text-blue-600" />
+
+            <div className="space-y-2">
+              <Label>Bet Size ($)</Label>
+              <Input
+                type="number"
+                value={betSize}
+                onChange={(e) => setBetSize(Number(e.target.value))}
+                min={10}
+                max={initialBalance}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Win Rate (%)</Label>
+              <Slider
+                value={[winRate]}
+                onValueChange={(value) => setWinRate(value[0])}
+                min={0}
+                max={100}
+                step={1}
+              />
+              <div className="text-sm text-gray-500">{winRate}%</div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Odds</Label>
+              <Input
+                type="number"
+                value={odds}
+                onChange={(e) => setOdds(Number(e.target.value))}
+                min={1.01}
+                max={10}
+                step={0.01}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Simulation Days</Label>
+              <Input
+                type="number"
+                value={simulationDays}
+                onChange={(e) => setSimulationDays(Number(e.target.value))}
+                min={1}
+                max={365}
+              />
+            </div>
+
+            <Button
+              onClick={runSimulation}
+              disabled={running}
+              className="w-full"
+            >
+              {running ? 'Running Simulation...' : 'Run Simulation'}
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Results</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {results.length > 0 ? (
+              <div className="space-y-6">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-4 bg-gray-50 rounded">
+                    <div className="text-sm text-gray-500">Final Balance</div>
+                    <div className="text-2xl font-bold">
+                      ${results[results.length - 1].balance.toFixed(2)}
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-bold">Simulation History</h3>
-                    <p className="text-sm text-muted-foreground">12 simulations run this week</p>
+                  <div className="p-4 bg-gray-50 rounded">
+                    <div className="text-sm text-gray-500">ROI</div>
+                    <div className="text-2xl font-bold">
+                      {calculateROI().toFixed(1)}%
+                    </div>
                   </div>
                 </div>
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center p-3 border rounded-lg">
-                    <div>
-                      <p className="font-medium">NFL Weather Impact</p>
-                      <p className="text-sm text-muted-foreground">2 hours ago</p>
+
+                <div className="h-[300px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={results}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="day" />
+                      <YAxis />
+                      <Tooltip />
+                      <Line
+                        type="monotone"
+                        dataKey="balance"
+                        stroke="#2563eb"
+                        name="Balance"
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-4 bg-gray-50 rounded">
+                    <div className="text-sm text-gray-500">Total Bets</div>
+                    <div className="text-2xl font-bold">
+                      {results[results.length - 1].bets}
                     </div>
-                    <Button variant="outline" size="sm">
-                      View
-                    </Button>
                   </div>
-                  <div className="flex justify-between items-center p-3 border rounded-lg">
-                    <div>
-                      <p className="font-medium">NBA Star Player Out</p>
-                      <p className="text-sm text-muted-foreground">Yesterday</p>
+                  <div className="p-4 bg-gray-50 rounded">
+                    <div className="text-sm text-gray-500">Win Rate</div>
+                    <div className="text-2xl font-bold">
+                      {((results[results.length - 1].wins / results[results.length - 1].bets) * 100).toFixed(1)}%
                     </div>
-                    <Button variant="outline" size="sm">
-                      View
-                    </Button>
-                  </div>
-                  <div className="flex justify-between items-center p-3 border rounded-lg">
-                    <div>
-                      <p className="font-medium">MLB Line Movement</p>
-                      <p className="text-sm text-muted-foreground">3 days ago</p>
-                    </div>
-                    <Button variant="outline" size="sm">
-                      View
-                    </Button>
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Main Content */}
-      <section className="py-12">
-        <div className="container px-4 md:px-6">
-          <Tabs defaultValue="setup" className="w-full">
-            <TabsList className="grid w-full grid-cols-3 mb-8">
-              <TabsTrigger value="setup">Simulation Setup</TabsTrigger>
-              <TabsTrigger value="variables">Adjust Variables</TabsTrigger>
-              <TabsTrigger value="results">Results</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="setup" className="space-y-8">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Set Up Your Simulation</CardTitle>
-                  <CardDescription>Configure the base scenario for your simulation</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-6">
-                    <div className="space-y-2">
-                      <Label htmlFor="simulation-name">Simulation Name</Label>
-                      <Input id="simulation-name" placeholder="e.g., NFL Weather Impact" />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="sport">Sport</Label>
-                      <Select defaultValue="nfl">
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select sport" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="nfl">NFL (Football)</SelectItem>
-                          <SelectItem value="nba">NBA (Basketball)</SelectItem>
-                          <SelectItem value="mlb">MLB (Baseball)</SelectItem>
-                          <SelectItem value="nhl">NHL (Hockey)</SelectItem>
-                          <SelectItem value="soccer">Soccer</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="game">Game</Label>
-                      <Select defaultValue="chiefs-49ers">
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select game" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="chiefs-49ers">Kansas City Chiefs vs. San Francisco 49ers</SelectItem>
-                          <SelectItem value="ravens-bengals">Baltimore Ravens vs. Cincinnati Bengals</SelectItem>
-                          <SelectItem value="bills-dolphins">Buffalo Bills vs. Miami Dolphins</SelectItem>
-                          <SelectItem value="cowboys-eagles">Dallas Cowboys vs. Philadelphia Eagles</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="market">Betting Market</Label>
-                      <Select defaultValue="spread">
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select market" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="moneyline">Moneyline</SelectItem>
-                          <SelectItem value="spread">Spread</SelectItem>
-                          <SelectItem value="total">Total (Over/Under)</SelectItem>
-                          <SelectItem value="props">Player Props</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label>Current Line</Label>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="border rounded-lg p-4">
-                          <div className="flex justify-between items-center">
-                            <div>
-                              <p className="font-medium">Kansas City Chiefs</p>
-                              <p className="text-sm text-muted-foreground">Home Team</p>
-                            </div>
-                            <div className="text-right">
-                              <p className="font-medium">-3.5</p>
-                              <p className="text-sm text-muted-foreground">-110</p>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="border rounded-lg p-4">
-                          <div className="flex justify-between items-center">
-                            <div>
-                              <p className="font-medium">San Francisco 49ers</p>
-                              <p className="text-sm text-muted-foreground">Away Team</p>
-                            </div>
-                            <div className="text-right">
-                              <p className="font-medium">+3.5</p>
-                              <p className="text-sm text-muted-foreground">-110</p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex justify-end pt-4">
-                      <Button>
-                        Continue to Variables
-                        <ArrowRight className="ml-2 h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="variables" className="space-y-8">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Adjust Variables</CardTitle>
-                  <CardDescription>Modify key variables to see how they affect the outcome</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-6">
-                    <div className="space-y-4">
-                      <h3 className="font-medium">Weather Conditions</h3>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="space-y-2">
-                          <div className="flex justify-between items-center">
-                            <Label className="flex items-center">
-                              <Thermometer className="h-4 w-4 mr-2" />
-                              Temperature
-                            </Label>
-                            <span className="text-sm font-medium">32°F</span>
-                          </div>
-                          <Slider defaultValue={[32]} min={0} max={100} step={1} />
-                        </div>
-                        <div className="space-y-2">
-                          <div className="flex justify-between items-center">
-                            <Label className="flex items-center">
-                              <Wind className="h-4 w-4 mr-2" />
-                              Wind Speed
-                            </Label>
-                            <span className="text-sm font-medium">15 mph</span>
-                          </div>
-                          <Slider defaultValue={[15]} min={0} max={50} step={1} />
-                        </div>
-                        <div className="space-y-2">
-                          <div className="flex justify-between items-center">
-                            <Label className="flex items-center">
-                              <Droplet className="h-4 w-4 mr-2" />
-                              Precipitation
-                            </Label>
-                            <span className="text-sm font-medium">30%</span>
-                          </div>
-                          <Slider defaultValue={[30]} min={0} max={100} step={1} />
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="space-y-4">
-                      <h3 className="font-medium">Player Status</h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="border rounded-lg p-4">
-                          <div className="space-y-4">
-                            <div className="flex items-center space-x-3">
-                              <div className="rounded-full bg-blue-100 p-2">
-                                <User className="h-4 w-4 text-blue-600" />
-                              </div>
-                              <div>
-                                <p className="font-medium">Patrick Mahomes (QB)</p>
-                                <p className="text-sm text-muted-foreground">Kansas City Chiefs</p>
-                              </div>
-                            </div>
-                            <Select defaultValue="active">
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select status" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="active">Active</SelectItem>
-                                <SelectItem value="questionable">Questionable (Limited)</SelectItem>
-                                <SelectItem value="out">Out (Injured)</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        </div>
-                        <div className="border rounded-lg p-4">
-                          <div className="space-y-4">
-                            <div className="flex items-center space-x-3">
-                              <div className="rounded-full bg-blue-100 p-2">
-                                <User className="h-4 w-4 text-blue-600" />
-                              </div>
-                              <div>
-                                <p className="font-medium">Christian McCaffrey (RB)</p>
-                                <p className="text-sm text-muted-foreground">San Francisco 49ers</p>
-                              </div>
-                            </div>
-                            <Select defaultValue="questionable">
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select status" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="active">Active</SelectItem>
-                                <SelectItem value="questionable">Questionable (Limited)</SelectItem>
-                                <SelectItem value="out">Out (Injured)</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="space-y-4">
-                      <h3 className="font-medium">Line Movement</h3>
-                      <div className="space-y-2">
-                        <div className="flex justify-between items-center">
-                          <Label>Spread Adjustment</Label>
-                          <span className="text-sm font-medium">Chiefs -2.5</span>
-                        </div>
-                        <Slider defaultValue={[-2.5]} min={-7} max={7} step={0.5} />
-                        <p className="text-sm text-muted-foreground">
-                          Adjust the spread to simulate line movement (negative favors Chiefs, positive favors 49ers)
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex justify-end pt-4">
-                      <Button>
-                        Run Simulation
-                        <ArrowRight className="ml-2 h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="results" className="space-y-8">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Simulation Results</CardTitle>
-                  <CardDescription>Analysis of how the adjusted variables affect the betting outcome</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <SimulationResults />
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
-        </div>
-      </section>
+            ) : (
+              <div className="text-center text-gray-500 py-8">
+                Run a simulation to see results
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
-  )
+  );
 }

@@ -1,315 +1,220 @@
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { BarChart3, Database, FileUp } from "lucide-react"
-import ModelBuilder from "@/components/model-builder"
+'use client';
+
+import { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+
+interface ModelFeature {
+  name: string;
+  weight: number;
+  type: 'numeric' | 'categorical';
+}
+
+interface ModelResult {
+  accuracy: number;
+  precision: number;
+  recall: number;
+  f1Score: number;
+}
 
 export default function ModelBuilderPage() {
+  const [modelName, setModelName] = useState('');
+  const [sport, setSport] = useState('');
+  const [features, setFeatures] = useState<ModelFeature[]>([]);
+  const [newFeature, setNewFeature] = useState({ name: '', weight: 1, type: 'numeric' });
+  const [results, setResults] = useState<ModelResult | null>(null);
+  const [training, setTraining] = useState(false);
+
+  const addFeature = () => {
+    if (newFeature.name) {
+      setFeatures([...features, newFeature]);
+      setNewFeature({ name: '', weight: 1, type: 'numeric' });
+    }
+  };
+
+  const removeFeature = (index: number) => {
+    setFeatures(features.filter((_, i) => i !== index));
+  };
+
+  const trainModel = async () => {
+    setTraining(true);
+    // Simulate model training
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    // Simulate results
+    setResults({
+      accuracy: 0.78,
+      precision: 0.75,
+      recall: 0.82,
+      f1Score: 0.78
+    });
+    
+    setTraining(false);
+  };
+
   return (
-    <div className="flex flex-col min-h-screen">
-      {/* Hero Section */}
-      <section className="gradient-bg py-16">
-        <div className="container px-4 md:px-6">
-          <div className="grid gap-6 lg:grid-cols-2 lg:gap-12 items-center">
-            <div className="flex flex-col justify-center space-y-4">
+    <div className="container mx-auto py-8 space-y-8">
+      <h1 className="text-3xl font-bold">Model Builder</h1>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Model Configuration</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="space-y-2">
+              <Label>Model Name</Label>
+              <Input
+                value={modelName}
+                onChange={(e) => setModelName(e.target.value)}
+                placeholder="e.g., NBA Player Props Predictor"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Sport</Label>
+              <Select value={sport} onValueChange={setSport}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select sport" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="nba">NBA (Basketball)</SelectItem>
+                  <SelectItem value="nfl">NFL (Football)</SelectItem>
+                  <SelectItem value="mlb">MLB (Baseball)</SelectItem>
+                  <SelectItem value="nhl">NHL (Hockey)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-4">
+              <Label>Features</Label>
               <div className="space-y-2">
-                <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl xl:text-5xl/none text-white">
-                  Predictive Model Builder
-                </h1>
-                <p className="max-w-[600px] text-white/80 md:text-xl">
-                  Create custom betting models with no coding required. Our AI analyzes historical data to identify
-                  profitable patterns.
-                </p>
+                {features.map((feature, index) => (
+                  <div key={index} className="flex items-center space-x-2">
+                    <div className="flex-1">
+                      <div className="text-sm font-medium">{feature.name}</div>
+                      <div className="text-xs text-gray-500">
+                        Weight: {feature.weight} | Type: {feature.type}
+                      </div>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => removeFeature(index)}
+                    >
+                      Remove
+                    </Button>
+                  </div>
+                ))}
+              </div>
+
+              <div className="space-y-2">
+                <div className="grid grid-cols-2 gap-2">
+                  <Input
+                    value={newFeature.name}
+                    onChange={(e) => setNewFeature({ ...newFeature, name: e.target.value })}
+                    placeholder="Feature name"
+                  />
+                  <Select
+                    value={newFeature.type}
+                    onValueChange={(value) => setNewFeature({ ...newFeature, type: value as 'numeric' | 'categorical' })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="numeric">Numeric</SelectItem>
+                      <SelectItem value="categorical">Categorical</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button onClick={addFeature} className="w-full">
+                  Add Feature
+                </Button>
               </div>
             </div>
-            <div className="flex justify-center lg:justify-end">
-              <div className="apple-card p-6 w-full max-w-md">
-                <div className="flex items-center space-x-4 mb-4">
-                  <div className="rounded-full bg-blue-100 p-2">
-                    <BarChart3 className="h-6 w-6 text-blue-600" />
+
+            <Button
+              onClick={trainModel}
+              disabled={training || !modelName || !sport || features.length === 0}
+              className="w-full"
+            >
+              {training ? 'Training Model...' : 'Train Model'}
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Model Performance</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {results ? (
+              <div className="space-y-6">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-4 bg-gray-50 rounded">
+                    <div className="text-sm text-gray-500">Accuracy</div>
+                    <div className="text-2xl font-bold">
+                      {(results.accuracy * 100).toFixed(1)}%
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-bold">Your Models</h3>
-                    <p className="text-sm text-muted-foreground">3 active models</p>
+                  <div className="p-4 bg-gray-50 rounded">
+                    <div className="text-sm text-gray-500">Precision</div>
+                    <div className="text-2xl font-bold">
+                      {(results.precision * 100).toFixed(1)}%
+                    </div>
+                  </div>
+                  <div className="p-4 bg-gray-50 rounded">
+                    <div className="text-sm text-gray-500">Recall</div>
+                    <div className="text-2xl font-bold">
+                      {(results.recall * 100).toFixed(1)}%
+                    </div>
+                  </div>
+                  <div className="p-4 bg-gray-50 rounded">
+                    <div className="text-sm text-gray-500">F1 Score</div>
+                    <div className="text-2xl font-bold">
+                      {(results.f1Score * 100).toFixed(1)}%
+                    </div>
                   </div>
                 </div>
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center p-3 border rounded-lg">
-                    <div>
-                      <p className="font-medium">NBA Player Props</p>
-                      <p className="text-sm text-muted-foreground">62% accuracy</p>
-                    </div>
-                    <Button variant="outline" size="sm">
-                      View
-                    </Button>
-                  </div>
-                  <div className="flex justify-between items-center p-3 border rounded-lg">
-                    <div>
-                      <p className="font-medium">NFL Underdog ML</p>
-                      <p className="text-sm text-muted-foreground">58% accuracy</p>
-                    </div>
-                    <Button variant="outline" size="sm">
-                      View
-                    </Button>
-                  </div>
-                  <div className="flex justify-between items-center p-3 border rounded-lg">
-                    <div>
-                      <p className="font-medium">MLB Totals</p>
-                      <p className="text-sm text-muted-foreground">55% accuracy</p>
-                    </div>
-                    <Button variant="outline" size="sm">
-                      View
-                    </Button>
-                  </div>
+
+                <div className="h-[300px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart
+                      data={[
+                        { metric: 'Accuracy', value: results.accuracy * 100 },
+                        { metric: 'Precision', value: results.precision * 100 },
+                        { metric: 'Recall', value: results.recall * 100 },
+                        { metric: 'F1 Score', value: results.f1Score * 100 },
+                      ]}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="metric" />
+                      <YAxis />
+                      <Tooltip />
+                      <Line
+                        type="monotone"
+                        dataKey="value"
+                        stroke="#2563eb"
+                        name="Score"
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Main Content */}
-      <section className="py-12">
-        <div className="container px-4 md:px-6">
-          <Tabs defaultValue="create" className="w-full">
-            <TabsList className="grid w-full grid-cols-3 mb-8">
-              <TabsTrigger value="create">Create Model</TabsTrigger>
-              <TabsTrigger value="datasets">Datasets</TabsTrigger>
-              <TabsTrigger value="predictions">Predictions</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="create" className="space-y-8">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Create a New Predictive Model</CardTitle>
-                  <CardDescription>
-                    Build a custom model to predict sports outcomes based on historical data
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ModelBuilder />
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="datasets" className="space-y-8">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Available Datasets</CardTitle>
-                  <CardDescription>Browse and manage datasets for your predictive models</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-6">
-                    <div className="flex justify-between items-center">
-                      <div className="space-y-1">
-                        <h3 className="font-medium">Upload New Dataset</h3>
-                        <p className="text-sm text-muted-foreground">Upload CSV files with historical sports data</p>
-                      </div>
-                      <Button>
-                        <FileUp className="mr-2 h-4 w-4" />
-                        Upload
-                      </Button>
-                    </div>
-
-                    <div className="space-y-4">
-                      <h3 className="font-medium">Your Datasets</h3>
-                      <div className="grid gap-4">
-                        <DatasetCard
-                          name="NBA Team Stats 2023-24"
-                          type="Basketball"
-                          records="1,230 games"
-                          updated="2 days ago"
-                        />
-                        <DatasetCard
-                          name="NFL Game Data 2022-23"
-                          type="Football"
-                          records="285 games"
-                          updated="1 week ago"
-                        />
-                        <DatasetCard
-                          name="MLB Player Props"
-                          type="Baseball"
-                          records="2,430 games"
-                          updated="3 days ago"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-4">
-                      <h3 className="font-medium">Public Datasets</h3>
-                      <div className="grid gap-4">
-                        <DatasetCard
-                          name="Premier League 2022-23"
-                          type="Soccer"
-                          records="380 games"
-                          updated="2 months ago"
-                        />
-                        <DatasetCard
-                          name="NBA Player Stats (5 seasons)"
-                          type="Basketball"
-                          records="6,150 games"
-                          updated="1 month ago"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="predictions" className="space-y-8">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Today's Predictions</CardTitle>
-                  <CardDescription>View predictions from your active models</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-6">
-                    <div className="border rounded-lg p-4">
-                      <div className="flex justify-between items-start mb-4">
-                        <div>
-                          <h3 className="font-medium">NBA Player Props Model</h3>
-                          <p className="text-sm text-muted-foreground">Predictions for tonight's games</p>
-                        </div>
-                        <div className="bg-blue-100 text-blue-600 text-xs font-medium px-2 py-1 rounded">
-                          High Confidence
-                        </div>
-                      </div>
-
-                      <div className="space-y-4">
-                        <PredictionCard
-                          player="LeBron James"
-                          stat="Points"
-                          line="Over 26.5"
-                          confidence={72}
-                          explanation="LeBron has exceeded this line in 8 of last 10 games against teams with bottom-10 defensive ratings."
-                        />
-                        <PredictionCard
-                          player="Stephen Curry"
-                          stat="3-Pointers Made"
-                          line="Over 4.5"
-                          confidence={68}
-                          explanation="Curry averages 5.8 three-pointers at home this season and the opponent allows the 3rd most three-point attempts."
-                        />
-                        <PredictionCard
-                          player="Nikola Jokić"
-                          stat="Assists"
-                          line="Over 9.5"
-                          confidence={65}
-                          explanation="Jokić has recorded 10+ assists in 7 of his last 8 games against this opponent."
-                        />
-                      </div>
-                    </div>
-
-                    <div className="border rounded-lg p-4">
-                      <div className="flex justify-between items-start mb-4">
-                        <div>
-                          <h3 className="font-medium">NFL Underdog ML Model</h3>
-                          <p className="text-sm text-muted-foreground">Predictions for upcoming games</p>
-                        </div>
-                        <div className="bg-yellow-100 text-yellow-600 text-xs font-medium px-2 py-1 rounded">
-                          Medium Confidence
-                        </div>
-                      </div>
-
-                      <div className="space-y-4">
-                        <PredictionCard
-                          player="Minnesota Vikings"
-                          stat="Moneyline"
-                          line="+160"
-                          confidence={58}
-                          explanation="Vikings have strong defensive metrics that match up well against opponent's offensive scheme."
-                        />
-                        <PredictionCard
-                          player="Miami Dolphins"
-                          stat="Moneyline"
-                          line="+135"
-                          confidence={55}
-                          explanation="Weather conditions favor Miami's offensive style and the opponent has struggled in similar conditions."
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
-        </div>
-      </section>
-    </div>
-  )
-}
-
-interface DatasetCardProps {
-  name: string
-  type: string
-  records: string
-  updated: string
-}
-
-function DatasetCard({ name, type, records, updated }: DatasetCardProps) {
-  return (
-    <div className="border rounded-lg p-4">
-      <div className="flex justify-between items-start">
-        <div className="flex items-start space-x-3">
-          <div className="rounded-full bg-blue-100 p-2 mt-1">
-            <Database className="h-4 w-4 text-blue-600" />
-          </div>
-          <div>
-            <h3 className="font-medium">{name}</h3>
-            <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-              <span>{type}</span>
-              <span>•</span>
-              <span>{records}</span>
-              <span>•</span>
-              <span>Updated {updated}</span>
-            </div>
-          </div>
-        </div>
-        <Button variant="outline" size="sm">
-          Use
-        </Button>
+            ) : (
+              <div className="text-center text-gray-500 py-8">
+                Train a model to see performance metrics
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
-  )
-}
-
-interface PredictionCardProps {
-  player: string
-  stat: string
-  line: string
-  confidence: number
-  explanation: string
-}
-
-function PredictionCard({ player, stat, line, confidence, explanation }: PredictionCardProps) {
-  return (
-    <div className="border rounded-lg p-4">
-      <div className="grid grid-cols-4 gap-4">
-        <div className="col-span-3">
-          <div className="flex justify-between mb-2">
-            <div>
-              <h4 className="font-medium">{player}</h4>
-              <p className="text-sm text-muted-foreground">
-                {stat}: {line}
-              </p>
-            </div>
-            <div className="text-right">
-              <div className="font-medium text-blue-600">{confidence}%</div>
-              <p className="text-sm text-muted-foreground">Confidence</p>
-            </div>
-          </div>
-          <p className="text-sm text-muted-foreground">{explanation}</p>
-        </div>
-        <div className="flex flex-col justify-center items-center border-l pl-4">
-          <Button className="w-full mb-2" size="sm">
-            Place Bet
-          </Button>
-          <Button variant="outline" className="w-full text-xs" size="sm">
-            Details
-          </Button>
-        </div>
-      </div>
-    </div>
-  )
+  );
 }
