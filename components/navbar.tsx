@@ -3,18 +3,18 @@
 import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Menu, Search, X, Brain, LineChart, School, Coins } from "lucide-react"
+import { Menu, Search, X, Brain, LineChart, School, Coins, BarChart3, BookOpen, PlayCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
 const navigation = [
-  { name: 'Dashboard', href: '/dashboard', icon: LineChart },
+  { name: 'Dashboard', href: '/', icon: BarChart3 },
   { name: 'Model Builder', href: '/model-builder', icon: Brain },
-  { name: 'Learner Mode', href: '/learner', icon: School },
-  { name: 'Simulator', href: '/simulator', icon: Coins },
+  { name: 'Analysis', href: '/analysis', icon: BookOpen },
+  { name: 'Simulator', href: '/simulator', icon: PlayCircle },
 ]
 
-const Navbar = () => {
+export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const pathname = usePathname()
 
@@ -133,5 +133,3 @@ const Navbar = () => {
     </header>
   )
 }
-
-export default Navbar

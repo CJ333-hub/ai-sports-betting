@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { getStats } from "@/lib/api";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 interface StatsPanelProps {
   stats: {
@@ -11,52 +10,77 @@ interface StatsPanelProps {
     win_rate: number;
     average_odds: number;
     roi: number;
-  } | null;
+  };
 }
 
 export default function StatsPanel({ stats }: StatsPanelProps) {
-  if (!stats) return null;
+  // Mock data for the charts
+  const profitData = [
+    { date: "Jan", profit: 0 },
+    { date: "Feb", profit: 0 },
+    { date: "Mar", profit: 0 },
+    { date: "Apr", profit: 0 },
+    { date: "May", profit: 0 },
+  ];
 
-  const metrics = [
-    {
-      label: "Total Predictions",
-      value: stats.total_predictions,
-      format: (val: number) => val.toLocaleString(),
-    },
-    {
-      label: "Accuracy",
-      value: stats.accuracy,
-      format: (val: number) => `${(val * 100).toFixed(1)}%`,
-    },
-    {
-      label: "Win Rate",
-      value: stats.win_rate,
-      format: (val: number) => `${(val * 100).toFixed(1)}%`,
-    },
-    {
-      label: "Average Odds",
-      value: stats.average_odds,
-      format: (val: number) => val.toFixed(2),
-    },
-    {
-      label: "ROI",
-      value: stats.roi,
-      format: (val: number) => `${(val * 100).toFixed(1)}%`,
-    },
+  const winRateData = [
+    { date: "Jan", rate: 0 },
+    { date: "Feb", rate: 0 },
+    { date: "Mar", rate: 0 },
+    { date: "Apr", rate: 0 },
+    { date: "May", rate: 0 },
   ];
 
   return (
-    <div className="grid grid-cols-2 gap-4">
-      {metrics.map((metric) => (
-        <Card key={metric.label} className="bg-gray-50">
-          <CardContent className="p-4">
-            <div className="text-sm text-gray-500">{metric.label}</div>
-            <div className="text-2xl font-bold mt-1">
-              {metric.format(metric.value)}
+    <div className="space-y-4">
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm font-medium">Profit History</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[200px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={profitData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="date" />
+                  <YAxis />
+                  <Tooltip />
+                  <Line
+                    type="monotone"
+                    dataKey="profit"
+                    stroke="#8884d8"
+                    strokeWidth={2}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
             </div>
           </CardContent>
         </Card>
-      ))}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm font-medium">Win Rate History</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[200px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={winRateData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="date" />
+                  <YAxis />
+                  <Tooltip />
+                  <Line
+                    type="monotone"
+                    dataKey="rate"
+                    stroke="#82ca9d"
+                    strokeWidth={2}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
