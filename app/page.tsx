@@ -5,6 +5,7 @@ import { ArrowRight, BarChart3, BookOpen, TrendingUp } from "lucide-react"
 import FeatureCard from "@/components/feature-card"
 import TestimonialCard from "@/components/testimonial-card"
 import Dashboard from "@/app/Dashboard";
+import EVPanel from "@/components/EVPanel"
 
 export default function Home() {
   return (
@@ -29,7 +30,7 @@ export default function Home() {
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
                 </Button>
-                <Button asChild variant="outline" size="lg" className="border-white text-white hover:bg-white/10">
+                <Button asChild variant="outline" size="lg" className="border-white text-blue-600 hover:bg-white/10">
                   <Link href="/model-builder">Build Your Model</Link>
                 </Button>
               </div>
@@ -89,6 +90,24 @@ export default function Home() {
               title="What-If Simulator"
               description="Test theories and simulate scenarios by adjusting variables like injuries, weather, and line movements."
             />
+          </div>
+
+          {/* +EV Panel Section */}
+          <div className="mt-16">
+            <div className="flex flex-col items-center justify-center space-y-4 text-center mb-8">
+              <div className="space-y-2">
+                <div className="inline-block rounded-lg bg-green-100 px-3 py-1 text-sm text-green-600">Value Bets</div>
+                <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
+                  Today's +EV Opportunities
+                </h2>
+                <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+                  Our AI models identify positive expected value bets across major sportsbooks.
+                </p>
+              </div>
+            </div>
+            <div className="max-w-4xl mx-auto">
+              <EVPanel />
+            </div>
           </div>
         </div>
       </section>
