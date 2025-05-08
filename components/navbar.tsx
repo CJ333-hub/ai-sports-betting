@@ -3,21 +3,20 @@
 import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Menu, Search, X } from "lucide-react"
+import { Menu, Search, X, Brain, LineChart, School, Coins } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+
+const navigation = [
+  { name: 'Dashboard', href: '/dashboard', icon: LineChart },
+  { name: 'Model Builder', href: '/model-builder', icon: Brain },
+  { name: 'Learner Mode', href: '/learner', icon: School },
+  { name: 'Simulator', href: '/simulator', icon: Coins },
+]
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const pathname = usePathname()
-
-  const routes = [
-    { name: "Home", path: "/" },
-    { name: "Learner Mode", path: "/learner" },
-    { name: "Model Builder", path: "/model-builder" },
-    { name: "Simulator", path: "/simulator" },
-    { name: "Pricing", path: "/pricing" },
-  ]
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -49,21 +48,36 @@ const Navbar = () => {
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-6">
-          {routes.map((route) => (
-            <Link
-              key={route.path}
-              href={route.path}
-              className={cn(
-                "text-sm font-medium transition-colors hover:text-primary",
-                pathname === route.path ? "text-foreground" : "text-muted-foreground",
-              )}
-            >
-              {route.name}
-            </Link>
-          ))}
+          {navigation.map((item) => {
+            const Icon = item.icon
+            return (
+              <Button
+                key={item.name}
+                variant={pathname === item.href ? 'default' : 'ghost'}
+                asChild
+              >
+                <Link
+                  href={item.href}
+                  className={cn(
+                    "text-sm font-medium transition-colors hover:text-primary",
+                    pathname === item.href ? "text-foreground" : "text-muted-foreground",
+                  )}
+                >
+                  <Icon className="h-4 w-4" />
+                  <span>{item.name}</span>
+                </Link>
+              </Button>
+            )
+          })}
         </nav>
 
         <div className="flex items-center gap-2">
+          <Button variant="outline" asChild>
+            <Link href="/docs">Documentation</Link>
+          </Button>
+          <Button asChild>
+            <Link href="/dashboard">Get Started</Link>
+          </Button>
           <Button variant="ghost" size="icon" className="hidden md:flex">
             <Search className="h-5 w-5" />
             <span className="sr-only">Search</span>
@@ -82,19 +96,28 @@ const Navbar = () => {
       {isMenuOpen && (
         <div className="md:hidden border-t border-border/40">
           <div className="container py-4 flex flex-col gap-4">
-            {routes.map((route) => (
-              <Link
-                key={route.path}
-                href={route.path}
-                className={cn(
-                  "text-sm font-medium transition-colors hover:text-primary p-2",
-                  pathname === route.path ? "text-foreground bg-muted rounded-md" : "text-muted-foreground",
-                )}
-                onClick={() => setIsMenuOpen(false)}
-              >
-                {route.name}
-              </Link>
-            ))}
+            {navigation.map((item) => {
+              const Icon = item.icon
+              return (
+                <Button
+                  key={item.name}
+                  variant={pathname === item.href ? 'default' : 'ghost'}
+                  asChild
+                >
+                  <Link
+                    href={item.href}
+                    className={cn(
+                      "text-sm font-medium transition-colors hover:text-primary p-2",
+                      pathname === item.href ? "text-foreground bg-muted rounded-md" : "text-muted-foreground",
+                    )}
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <Icon className="h-4 w-4" />
+                    <span>{item.name}</span>
+                  </Link>
+                </Button>
+              )
+            })}
             <div className="flex flex-col gap-2 pt-2 border-t">
               <Button variant="outline" className="w-full justify-start">
                 <Search className="h-4 w-4 mr-2" />
